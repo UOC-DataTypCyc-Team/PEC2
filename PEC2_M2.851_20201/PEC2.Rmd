@@ -7,22 +7,48 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## 1.Carga del fichero de Datos
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+```{r load_data}
+library(readr)
 
-```{r cars}
-summary(cars)
+data <- read_csv("train.csv", col_types = cols(Embarked = col_factor(levels = c("S", 
+    "Q", "C")), PassengerId = col_integer(), 
+    Pclass = col_factor(levels = c("1", "2", 
+        "3")), Sex = col_factor(levels = c("male", 
+        "female")), Survived = col_factor(levels = c("0", 
+        "1"))))
+
+View(data)
 ```
 
-## Including Plots
+## 2. Descripción del Dataset
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+str(data)
+summary(data)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r Graphic Anlysis Extreme Values}
+par(mfrow=c(1,2))
+boxplot(data$Age, main="Age")
+hist(data$Age, main="Age")
+
+par(mfrow=c(1,2))
+boxplot(data$Fare, main="Fare")
+hist(data$Fare, main="Fare")
+
+par(mfrow=c(1,2))
+boxplot(data$SibSp, main="SibSp")
+hist(data$SibSp, main="SibSp")
+
+par(mfrow=c(1,2))
+boxplot(data$Parch, main="Parch")
+hist(data$Parch, main="Parch")
+```
+
+```{r}
+table(data$Sex)
+table(data$Survived)
+```
