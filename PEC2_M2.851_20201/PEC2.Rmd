@@ -30,6 +30,8 @@ str(data)
 summary(data)
 ```
 
+## 3.Búsqueda de Valores extremos
+
 ```{r Graphic Anlysis Extreme Values}
 par(mfrow=c(1,2))
 boxplot(data$Age, main="Age")
@@ -51,4 +53,34 @@ hist(data$Parch, main="Parch")
 ```{r}
 table(data$Sex)
 table(data$Survived)
+```
+
+
+## 4. Búsqueda de NA
+
+```{r}
+data_na<-colSums(is.na(data))
+print(data_na)
+barplot(data_na)
+```
+
+Reemplazamos los valores NA de la edad por la media
+```{r}
+data1<-data
+data1$Age[is.na(data1$Age)]<-median(data$Age,na.rm=TRUE)
+```
+
+
+Reemplazamos los NA Embarked
+
+```{r}
+library(dplyr)
+df2<-data %>% filter(!is.na(Embarked))
+```
+
+
+Analisis de correlación de valores númericos
+```{r}
+corrplot(cor(data[,6:8]), method = 'number')
+
 ```
