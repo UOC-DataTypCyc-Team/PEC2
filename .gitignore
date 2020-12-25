@@ -86,3 +86,6 @@ __pycache__
 
 # Ignore .csv files
 #*.csv
+
+#Ignore .html file (Stop ignoring it at the end of this project)
+*PEC2.html
