@@ -49,21 +49,33 @@ print(data_na)
 barplot(data_na)
 ```
 
-Reemplazamos los valores NA de la edad por la media
+Reemplazamos los valores NA de la edad por la mediana
+
 ```{r}
-data1<-data
-data1$Age[is.na(data1$Age)]<-median(data$Age,na.rm=TRUE)
+df<-data
+df$Age[is.na(df$Age)]<-median(data$Age,na.rm=TRUE)
+print(colSums(is.na(df)))
 ```
 
-
-Reemplazamos los NA Embarked
+Eliminamos los NA Embarked ya que no son estadísticamente significativos comparados con las 889 observaciones restantes
 
 ```{r}
 library(dplyr)
-df2<-data %>% filter(!is.na(Embarked))
+df<-data %>% filter(!is.na(Embarked))
+print(colSums(is.na(df)))
+```
+
+Cabin contiene 3/4 de valores faltantes, por lo que no sería prudente imputar todos esos valores. Obviaremos este atributo
+
+```{r}
+library(dplyr)
+df$Cabin <- NULL
+#print(head(df))
 ```
 
 ## Identificación y tratamiento de valores extremos. 
+
+Visualizamos histogramas y gráficos de caja (box-plots) de las variables de tipo "double"
 
 ```{r Graphic Anlysis Extreme Values}
 par(mfrow=c(1,2))
@@ -86,6 +98,7 @@ hist(data$Parch, main="Parch")
 ```{r}
 table(data$Sex)
 table(data$Survived)
+warnings()
 ```
 
 # Análisis de los datos. 
