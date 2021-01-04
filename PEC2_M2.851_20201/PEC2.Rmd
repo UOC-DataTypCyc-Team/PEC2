@@ -61,7 +61,7 @@ Eliminamos los NA Embarked ya que no son estadísticamente significativos compar
 
 ```{r}
 library(dplyr)
-df<-data %>% filter(!is.na(Embarked))
+df<-df %>% filter(!is.na(Embarked))
 print(colSums(is.na(df)))
 ```
 
@@ -70,7 +70,7 @@ Cabin contiene 3/4 de valores faltantes, por lo que no sería prudente imputar t
 ```{r}
 library(dplyr)
 df$Cabin <- NULL
-#print(head(df))
+print(colSums(is.na(df)))
 ```
 
 ## Identificación y tratamiento de valores extremos. 
@@ -94,19 +94,88 @@ par(mfrow=c(1,2))
 boxplot(data$Parch, main="Parch")
 hist(data$Parch, main="Parch")
 ```
+Hacemos contenedores nuevos con los valores de "Age", "Fare", "SibSp" y "Parch", deshaciendonos de los outliers
 
 ```{r}
-table(data$Sex)
-table(data$Survived)
+library(ggplot2)
+outlier_norm <- function(x){
+   qntile <- quantile(x, probs=c(.25, .75))
+   caps <- quantile(x, probs=c(.05, .95))
+   H <- 1.5 * IQR(x, na.rm = T)
+   x[x < (qntile[1] - H)] <- caps[1]
+   x[x > (qntile[2] + H)] <- caps[2]
+   return(x)
+}
+
+df$Age=outlier_norm(df$Age)
+par(mfrow=c(1,2))
+boxplot(df$Age, main="Age")
+hist(df$Age, main="Age")
+
+df$Fare=outlier_norm(df$Fare)
+par(mfrow=c(1,2))
+boxplot(df$Fare, main="Fare")
+hist(df$Fare, main="Fare")
+
+df$SibSp=outlier_norm(df$SibSp)
+par(mfrow=c(1,2))
+boxplot(df$SibSp, main="SibSp")
+hist(df$SibSp, main="SibSp")
+
+df$Parch=outlier_norm(df$Parch)
+par(mfrow=c(1,2))
+boxplot(df$Parch, main="Parch")
+hist(df$Parch, main="Parch")
+
+#table(data$Sex)
+#table(data$Survived)
+#warnings()
+```
+```{r}
+#table(data$Sex)
+#table(data$Survived)
 warnings()
 ```
 
 # Análisis de los datos. 
 ## Selección de los grupos de datos que se quieren analizar/comparar (planificación  de los análisis a aplicar). 
 
+Aitor: Para predecir survived/no survived podemos hacer "N" grupos. Por ejemplo:
+1- survived ~ sex + class
+2- survived ~ sex
+
+Pero yo lo decidiria despues del estudio de correlación (mira mas abajo), para hacer grupos que no tengan relacion entre si, o cuanta menos mejor.
+
+Y luego se haria logistic regression. Para hacer logistic regression con un grupo se haría asi:
+
+```{r}
+modelo.logit <- glm(data = df, formula = Survived ~ Sex + Age + Pclass + Embarked, family = "binomial")
+summary(modelo.logit)
+```
+
 ## Comprobación de la normalidad y homogeneidad de la varianza. 
 
+Aitor: Este es tal cual así
+
+```{r}
+par(mfrow = c(1,2))
+plot(modelo_multiple)
+```
+
 ## Aplicación de pruebas estadísticas para comparar los grupos de datos. En función  de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis,  correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis  diferentes. 
+
+Aitor: Para hacerlo con el resto de atributos hay que pasarlo a numerico, haciendolo como tu (Victor) lo has hecho en el primer paso.
+
+Luego haria logistic regression (como he puesto mas arriba)
+
+Y por ultimo un contraste de hipotesis (miralo en tu pec de estadistica, creo que está hecho ahí)
+
+```{r}
+#Aitor:Hay que hacer lo que has hecho en el primer paso para convertir los atributos que se pueda a numerico y aádirlos a SibSp y Parch
+require(corrplot)                                                                                                           
+corrplot.mixed(corr = cor(df[,c("SibSp", "Parch")],
+                          method = "pearson"))
+```
 
 # Representación de los resultados a partir de tablas y gráficas. 
 
