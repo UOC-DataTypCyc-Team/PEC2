@@ -8,6 +8,8 @@ output:
     number_sections: yes
 ---
 
+[Github](https://github.com/UOC-DataTypCyc-Team/PEC2 "Github")
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
@@ -239,7 +241,7 @@ exp(cbind(coef(modelo.logit),confint(modelo.logit)))
 exp(cbind(coef(modelo2.logit),confint(modelo.logit)))
 ```
 
-Como podemos observar el primer modelo tiene una sensitividad y una especificidad más altos, dando una media harmónica (F1-Score) más alto
+Como podemos observar el primer modelo tiene una sensitividad y una especificidad más altos, dando una media harmónica (F1-Score) más alta
 
 ```{r}
 confusionMatrix(table(predict(modelo.logit, type="response") >= 0.5,data$Survived != 1))
@@ -275,11 +277,10 @@ tbl <- with(data, table(Survived, Pclass))
 barplot(tbl, beside = TRUE, legend = TRUE)
 ```
 
-Vemos como claramente que la una gran parte de los supervivientes eran de primera clase aunque la proporción es menor que en la tercera.
+Vemos como claramente una gran parte de los supervivientes eran de primera clase aunque la proporción es menor que en la tercera.
 
 # Resolución del problema. A partir de los resultados obtenidos, ¿cuáles son las  conclusiones? ¿Los resultados permiten responder al problema?
 
-Como conclusiones del estudio, podemos concluir que si eras mujer y de primera clase, las probabilidades de sobrevivir eran mucho más altas en cualquier otro caso. En cambio, si pertenecías al grupo de tercera clase y eras hombre, las probabilidades de sobrevivir eran bastante escasas.
-
+Podemos concluir que el hecho de ser mujer y de tener un camarote superior (primera clase) jugó un papel importante a la hora de sobrevivir al hundimiento, probablemente por tener preferencia y una mayor facilidad para evacuar el barco desde los camarotes superiores, que lógicamente tardaron mas en hundirse.
 
 # Código: Hay que adjuntar el código, preferiblemente en R, con el que se ha realizado la  limpieza, análisis y representación de los datos. Si lo preferís, también podéis trabajar en  Python.  
