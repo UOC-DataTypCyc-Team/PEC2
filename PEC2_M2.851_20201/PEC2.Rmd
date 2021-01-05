@@ -24,6 +24,7 @@ Cargamos el conjunto de datos y además modificamos el tipo de algunos de los ca
 library(readr)
 library(dplyr)
 library(ggplot2)
+library(caret)
 require(corrplot)  
 
 data <- read_csv("train.csv", col_types = cols(Embarked = col_factor(levels = c("S", 
@@ -151,23 +152,18 @@ hist(data$Parch, main="Parch")
 
 ## Selección de los grupos de datos que se quieren analizar/comparar (planificación  de los análisis a aplicar).
 
+En esta sección analizaremos, por un lado, Survived en base a Sex:
+
 ```{r}
 male_survived <- data[data$Sex == "male","Survived"]
 female_survived <- data[data$Sex == "female","Survived"]
 ```
 
-Aitor: Para predecir survived/no survived podemos hacer "N" grupos. Por ejemplo:
-1- survived ~ sex + class
-2- survived ~ sex
+Y por otro lado incorporaremos nuevos atributos que actuarán como regresores para evaluar modelos de regresión logística. Formaremos dos grupos en base al estudio de correlación que hemos realizado más adelante:
 
-Pero yo lo decidiria despues del estudio de correlación (mira mas abajo), para hacer grupos que no tengan relacion entre si, o cuanta menos mejor.
+1) Survived ~ Sex + Pclass + Fare
+2) Survived ~ Sex + Pclass + Embarked
 
-Y luego se haria logistic regression. Para hacer logistic regression con un grupo se haría asi:
-
-```{r}
-modelo.logit <- glm(data = data, formula = Survived ~ Sex + Age + Pclass + Embarked, family = "binomial")
-summary(modelo.logit)
-```
 
 ## Comprobación de la normalidad y homogeneidad de la varianza. 
 
@@ -192,7 +188,7 @@ H_{0}: La&muestra&proviene&de&una&población&normal.\\
 H_{1}: La&muestra&proviene&de&una&población&no&normal.\\
 \end{array}
 $$
-A continuación vamos a relalizar las pruebas de normalidad de shapiro-test, ya que la muestra de población es significativa.
+A continuación vamos a realizar las pruebas de normalidad de shapiro-test, ya que la muestra de población es significativa.
 
 ```{r}
 shapiro.test(data$Age)
@@ -210,31 +206,50 @@ En este caso podemos observar que el p-values<0.05, por tanto debemos rechazar l
 
 ```
 
-
-
 ## Aplicación de pruebas estadísticas para comparar los grupos de datos. En función  de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis,  correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis  diferentes. 
 
-Aitor: Para hacerlo con el resto de atributos hay que pasarlo a numerico, haciendolo como tu (Victor) lo has hecho en el primer paso.
-
-Luego haria logistic regression (como he puesto mas arriba)
-
-Y por ultimo un contraste de hipotesis (miralo en tu pec de estadistica, creo que está hecho ahí)
+Vemos que el regresor "Sex" tiene una correlación positiva alta para determinar "Survived". Asimismo los regresores "Fare" y "Pclass" presentan una correlación negativa alta, lo cual tiene sentido ya que precios de tickets altos se corresponden con un camarote superior (una Pclass = 1 es mejor que una Pclass = 2). una Pclass alta tiene una correlación negativa alta respecto a "Survived":
 
 ```{r}
 data$Survived <- as.numeric(data$Survived)
-data$Sex <- as.numeric(data$Sex)
-data$Fare <- as.numeric(data$Fare)
 data$Pclass <- as.numeric(data$Pclass)
 data$Embarked <- as.numeric(data$Embarked)
+data$Sex <- as.numeric(data$Sex)
 
-corrplot.mixed(corr = cor(data[,c("SibSp", "Parch", "Sex", "Fare", "Pclass", "Embarked", "Survived")],
+corrplot.mixed(corr = cor(data[,c("SibSp", "Parch", "Sex", "Age", "Fare", "Pclass", "Embarked", "Survived")],
                           method = "pearson"))
 ```
 
+```{r}
+data$Survived <- as.factor(data$Survived)
+modelo.logit <- glm(data = data, formula = Survived ~ Sex + Pclass + Fare, family = "binomial")
+modelo2.logit <- glm(data = data, formula = Survived ~ Sex + Pclass + Embarked, family = "binomial")
+summary(modelo.logit)
+summary(modelo2.logit)
+```
+
+En ambos modelos se puede observas que un incremento de una unidad en Sex, es decir, cuando el sexo es femenino (ajustando por las otras regresoras) aumenta las odds de Survived en 14.01, que un incremento de una unidad en Pclass (ajustando por las otras regresoras) reduce las odds
+de Survived en 0.38, y que que un incremento de una unidad en Fare (ajustando por las otras regresoras)
+reduce las odds de Survived en 0.38
+
+Por lo tanto se observa que Sex tiene un mayor impacto en incrementar Survived mientras que Pclass presenta un mayor impacto en sentido contrario
+
+```{r}
+exp(cbind(coef(modelo.logit),confint(modelo.logit)))
+exp(cbind(coef(modelo2.logit),confint(modelo.logit)))
+```
+
+Como podemos observar el primer modelo tiene una sensitividad y una especificidad más altos, dando una media harmónica (F1-Score) más alto
+
+```{r}
+confusionMatrix(table(predict(modelo.logit, type="response") >= 0.5,data$Survived != 1))
+confusionMatrix(table(predict(modelo2.logit, type="response") >= 0.5,data$Survived != 1))
+```
 
 # Representación de los resultados a partir de tablas y gráficas.
 
-A través de este gráfico podemos observar que existe una relación muy alta entre las variables de Supervivencia con Sexo y Suvervivencia con Clase. El resto de relaciones es aparentemente obvio ya que el precio pagadao por el billete va muy relacionado con la clase y por tanto no aporta ninguna información interesante. Por otro lado lo mismo ocurre entre las variables de SibSp y Parch ya que directamente estan muy relacionadas entre ellas y tampoco aportan información imteresante.
+A través de este gráfico podemos observar que existe una relación muy alta entre las variables de Supervivencia con Sexo y Supervivencia con Clase. El resto de relaciones es aparentemente obvio ya que el precio pagadao por el billete va muy relacionado con la clase y por tanto no aporta ninguna información interesante. Por otro lado lo mismo ocurre entre las variables de SibSp y Parch ya que directamente estan muy relacionadas entre ellas y tampoco aportan información imteresante.
+
 
 ```{r}
 ggplot(data, aes(x=factor(1), fill=factor(Sex))) + geom_bar(width = 1) + coord_polar("y")
