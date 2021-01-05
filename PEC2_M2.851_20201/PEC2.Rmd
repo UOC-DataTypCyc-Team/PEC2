@@ -43,7 +43,7 @@ summary(data)
 # Limpieza de los datos. 
 ## ¿Los datos contienen ceros o elementos vacíos? ¿Cómo gestionarías cada uno  de estos casos?
 
-Los datos contienen algunos valores nulos que continuación se muestran númericamente y gráficamente las variables con valores NA o nulos.
+Los datos contienen algunos valores nulos que a continuación se muestran númericamente y gráficamente las variables con valores NA o nulos.
 
 ```{r}
 data_na<-colSums(is.na(data))
@@ -51,11 +51,11 @@ print(data_na)
 barplot(data_na)
 ```
 
-Se puede observar claramente que existes 3 variables del conjunto de datos seleccionados que presentan nulos o elementos vacíos, estas son por orden de mayor a menor número de NA: Cabin, Age, Embarked.
+Se puede observar claramente que existen 3 variables del conjunto de datos seleccionados que presentan nulos o elementos vacíos, estas son por orden de mayor a menor número de NA: Cabin, Age, Embarked.
 
 Estas 3 variables, como se ha descrito anteriormente son de formato caracter para Cabin, Númerico para Age y de Factor para Embarked.
 
-Uno de los métodos más comunes para gestionar los valores nulos en caso que el formato sea númerico es por el método de subsitución por la mediana. Este método cosniste en calcular la mediana de todos los valores de esa variable que no sean nulos y substituir los nulos por el resultado de la mediana.
+Uno de los métodos más comunes para gestionar los valores nulos en caso de que el formato sea númerico es por el método de susitución por la mediana. Este método consiste en calcular la mediana de todos los valores de esa variable que no sean nulos y sustituir los nulos por el resultado de la mediana.
 
 Reemplazamos los valores NA de la edad por la mediana
 
@@ -65,7 +65,7 @@ df$Age[is.na(df$Age)]<-median(data$Age,na.rm=TRUE)
 print(colSums(is.na(df)))
 ```
 
-Como resultado los valores nulos de la variable Age se han substituido por la mediana calculada.
+Como resultado los valores nulos de la variable Age se han sustituido por la mediana calculada.
 
 En el caso de los valores de la variable Embarked observamos que solo existen 3 registros con valores nulos. En este caso, eliminamos los NA de la variable Embarked ya que no son estadísticamente significativos comparados con las 889 observaciones restantes.
 
@@ -105,6 +105,7 @@ par(mfrow=c(1,2))
 boxplot(data$Parch, main="Parch")
 hist(data$Parch, main="Parch")
 ```
+
 Se puede observar en los gráficos mostrados anteriormente como en todos los casos podemos observar cierto grado de valores extremos en las variables númericas.
 
 A continuación, realizaremos contenedores nuevos con los valores de "Age", "Fare", "SibSp" y "Parch", deshaciendonos de los outliers identificados anteriormente.
@@ -148,7 +149,6 @@ hist(df$Parch, main="Parch")
 ```
 
 Podemos observar como los valores extremos han desaparecido en las variables identificadas, por tanto hemos 
-
 
 ```{r}
 #table(data$Sex)
