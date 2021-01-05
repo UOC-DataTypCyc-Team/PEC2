@@ -41,13 +41,21 @@ summary(data)
 ```
 
 # Limpieza de los datos. 
-## ¿Los datos contienen ceros o elementos vacíos? ¿Cómo gestionarías cada uno  de estos casos? 
+## ¿Los datos contienen ceros o elementos vacíos? ¿Cómo gestionarías cada uno  de estos casos?
+
+Los datos contienen algunos valores nulos que continuación se muestran númericamente y gráficamente las variables con valores NA o nulos.
 
 ```{r}
 data_na<-colSums(is.na(data))
 print(data_na)
 barplot(data_na)
 ```
+
+Se puede observar claramente que existes 3 variables del conjunto de datos seleccionados que presentan nulos o elementos vacíos, estas son por orden de mayor a menor número de NA: Cabin, Age, Embarked.
+
+Estas 3 variables, como se ha descrito anteriormente son de formato caracter para Cabin, Númerico para Age y de Factor para Embarked.
+
+Uno de los métodos más comunes para gestionar los valores nulos en caso que el formato sea númerico es por el método de subsitución por la mediana. Este método cosniste en calcular la mediana de todos los valores de esa variable que no sean nulos y substituir los nulos por el resultado de la mediana.
 
 Reemplazamos los valores NA de la edad por la mediana
 
@@ -57,7 +65,9 @@ df$Age[is.na(df$Age)]<-median(data$Age,na.rm=TRUE)
 print(colSums(is.na(df)))
 ```
 
-Eliminamos los NA Embarked ya que no son estadísticamente significativos comparados con las 889 observaciones restantes
+Como resultado los valores nulos de la variable Age se han substituido por la mediana calculada.
+
+En el caso de los valores de la variable Embarked observamos que solo existen 3 registros con valores nulos. En este caso, eliminamos los NA de la variable Embarked ya que no son estadísticamente significativos comparados con las 889 observaciones restantes.
 
 ```{r}
 library(dplyr)
@@ -65,7 +75,7 @@ df<-df %>% filter(!is.na(Embarked))
 print(colSums(is.na(df)))
 ```
 
-Cabin contiene 3/4 de valores faltantes, por lo que no sería prudente imputar todos esos valores. Obviaremos este atributo
+En el caso de la variable Cabin contiene 3/4 de valores nulos, por lo que no sería prudente imputar todos esos valores ya que nos estaríamos basando en una suposición falsa. Obviaremos este atributo
 
 ```{r}
 #library(dplyr)
@@ -76,7 +86,7 @@ print(colSums(is.na(df)))
 
 ## Identificación y tratamiento de valores extremos. 
 
-Visualizamos histogramas y gráficos de caja (box-plots) de las variables de tipo "double"
+Para la visualización de valores extremos, usaremos histogramas y gráficos de caja (box-plots) de las variables de tipo númericas, para intentear identrificar si visualmente podemos observar los valores extremos.
 
 ```{r Graphic Anlysis Extreme Values}
 par(mfrow=c(1,2))
@@ -95,7 +105,11 @@ par(mfrow=c(1,2))
 boxplot(data$Parch, main="Parch")
 hist(data$Parch, main="Parch")
 ```
-Hacemos contenedores nuevos con los valores de "Age", "Fare", "SibSp" y "Parch", deshaciendonos de los outliers
+Se puede observar en los gráficos mostrados anteriormente como en todos los casos podemos observar cierto grado de valores extremos en las variables númericas.
+
+A continuación, realizaremos contenedores nuevos con los valores de "Age", "Fare", "SibSp" y "Parch", deshaciendonos de los outliers identificados anteriormente.
+
+Para realizar esta acción crearemos una función que bla bla (Victor: si podemos explicar un poco que hace la función)
 
 ```{r}
 library(ggplot2)
@@ -132,11 +146,17 @@ hist(df$Parch, main="Parch")
 #table(data$Survived)
 #warnings()
 ```
+
+Podemos observar como los valores extremos han desaparecido en las variables identificadas, por tanto hemos 
+
+
 ```{r}
 #table(data$Sex)
 #table(data$Survived)
 warnings()
 ```
+
+
 
 # Análisis de los datos. 
 ## Selección de los grupos de datos que se quieren analizar/comparar (planificación  de los análisis a aplicar). 
@@ -161,6 +181,38 @@ Aitor: Este es tal cual así
 ```{r}
 par(mfrow = c(1,2))
 plot(modelo_multiple)
+```
+
+Para la comprobación de la normalidad vamos a comprobamos si la variable se aproxima a un modelo de normalidad en las muestras. 
+
+```{r}
+qqnorm(data$Age)
+qqline(data$Age)
+```
+
+```{r}
+boxplot(data$Age, main="Age")
+```
+
+Una forma menos subjetiva de explorar la normalidad de un conjunto de datos es por medio de las pruebas de normalidad. Se va a usar un intervalo de confianza estandar del 95%. Las hipótesis para este tipo de pruebas son:
+$$
+\begin{array}{ll}
+H_{0}: La&muestra&proviene&de&una&población&normal.\\
+H_{1}: La&muestra&proviene&de&una&población&no&normal.\\
+\end{array}
+$$
+A continuación vamos a relalizar las pruebas de normalidad de shapiro-test, ya que la muestra de población es significativa.
+
+
+
+```{r}
+shapiro.test(data$Age)
+```
+
+En este caso podemos observar que el p-values<0.05, por tanto debemos rechazar la hipotesis nula a favor de la alternativa y afirmar que estos datos no provienen de una población normalmente distribuida. 
+
+```{r}
+shapiro.test(data$Parch)
 ```
 
 ## Aplicación de pruebas estadísticas para comparar los grupos de datos. En función  de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis,  correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis  diferentes. 
