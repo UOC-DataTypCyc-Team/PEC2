@@ -224,9 +224,14 @@ Luego haria logistic regression (como he puesto mas arriba)
 Y por ultimo un contraste de hipotesis (miralo en tu pec de estadistica, creo que está hecho ahí)
 
 ```{r}
-#Aitor:Hay que hacer lo que has hecho en el primer paso para convertir los atributos que se pueda a numerico y aádirlos a SibSp y Parch
+df$Survived <- as.numeric(df$Survived)
+df$Sex <- as.numeric(df$Sex)
+df$Fare <- as.numeric(df$Fare)
+df$Pclass <- as.numeric(df$Pclass)
+df$Embarked <- as.numeric(df$Embarked)
+
 require(corrplot)                                                                                                           
-corrplot.mixed(corr = cor(df[,c("SibSp", "Parch")],
+corrplot.mixed(corr = cor(df[,c("SibSp", "Parch", "Sex", "Fare", "Pclass", "Embarked", "Survived")],
                           method = "pearson"))
 ```
 
