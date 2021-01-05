@@ -14,7 +14,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Descripción del dataset. ¿Por qué es importante y qué pregunta/problema pretende  responder? 
 
-El conjunto de datos del "Titanic" nos parece de especial relevancia, ya que blablabla.... y a su vez pretendemos responder a la pregunta blablabla
+El conjunto de datos del "Titanic" nos parece de especial relevancia, ya que marcó un hito dentro de la historia de la navegación y al mismo tiempo no parece un reto interesante en el que pretendemos responder a la pregunta de "qué factores fueron los que jugaron un papel más importante en la supervivencia dentro del contexto del hundimiento del Titanic
 
 # Integración y selección de los datos de interés a analizar. 
 
@@ -22,6 +22,9 @@ Cargamos el conjunto de datos y además modificamos el tipo de algunos de los ca
 
 ```{r load_data}
 library(readr)
+library(dplyr)
+library(ggplot2)
+require(corrplot)  
 
 data <- read_csv("train.csv", col_types = cols(Embarked = col_factor(levels = c("S", 
     "Q", "C")), PassengerId = col_integer(), 
@@ -60,9 +63,8 @@ Uno de los métodos más comunes para gestionar los valores nulos en caso de que
 Reemplazamos los valores NA de la edad por la mediana
 
 ```{r}
-df<-data
-df$Age[is.na(df$Age)]<-median(data$Age,na.rm=TRUE)
-print(colSums(is.na(df)))
+data$Age[is.na(data$Age)]<-median(data$Age,na.rm=TRUE)
+print(colSums(is.na(data)))
 ```
 
 Como resultado los valores nulos de la variable Age se han sustituido por la mediana calculada.
@@ -70,9 +72,9 @@ Como resultado los valores nulos de la variable Age se han sustituido por la med
 En el caso de los valores de la variable Embarked observamos que solo existen 3 registros con valores nulos. En este caso, eliminamos los NA de la variable Embarked ya que no son estadísticamente significativos comparados con las 889 observaciones restantes.
 
 ```{r}
-library(dplyr)
-df<-df %>% filter(!is.na(Embarked))
-print(colSums(is.na(df)))
+
+data<-data %>% filter(!is.na(Embarked))
+print(colSums(is.na(data)))
 ```
 
 En el caso de la variable Cabin contiene 3/4 de valores nulos, por lo que no sería prudente imputar todos esos valores ya que nos estaríamos basando en una suposición falsa. Obviaremos este atributo
@@ -80,8 +82,8 @@ En el caso de la variable Cabin contiene 3/4 de valores nulos, por lo que no ser
 ```{r}
 #library(dplyr)
 #df2<-data %>% filter(!is.na(Embarked))
-df$Cabin <- NULL
-print(colSums(is.na(df)))
+data$Cabin <- NULL
+print(colSums(is.na(data)))
 ```
 
 ## Identificación y tratamiento de valores extremos. 
@@ -110,10 +112,11 @@ Se puede observar en los gráficos mostrados anteriormente como en todos los cas
 
 A continuación, realizaremos contenedores nuevos con los valores de "Age", "Fare", "SibSp" y "Parch", deshaciendonos de los outliers identificados anteriormente.
 
-Para realizar esta acción crearemos una función que bla bla (Victor: si podemos explicar un poco que hace la función)
+Para realizar esta acción crearemos una función que descarta los valores mas lejanos en la distribución.
+
+Podemos observar como los valores extremos han desaparecido en las variables identificadas:
 
 ```{r}
-library(ggplot2)
 outlier_norm <- function(x){
    qntile <- quantile(x, probs=c(.25, .75))
    caps <- quantile(x, probs=c(.05, .95))
@@ -123,40 +126,26 @@ outlier_norm <- function(x){
    return(x)
 }
 
-df$Age=outlier_norm(df$Age)
+data$Age=outlier_norm(data$Age)
 par(mfrow=c(1,2))
-boxplot(df$Age, main="Age")
-hist(df$Age, main="Age")
+boxplot(data$Age, main="Age")
+hist(data$Age, main="Age")
 
-df$Fare=outlier_norm(df$Fare)
+data$Fare=outlier_norm(data$Fare)
 par(mfrow=c(1,2))
-boxplot(df$Fare, main="Fare")
-hist(df$Fare, main="Fare")
+boxplot(data$Fare, main="Fare")
+hist(data$Fare, main="Fare")
 
-df$SibSp=outlier_norm(df$SibSp)
+data$SibSp=outlier_norm(data$SibSp)
 par(mfrow=c(1,2))
-boxplot(df$SibSp, main="SibSp")
-hist(df$SibSp, main="SibSp")
+boxplot(data$SibSp, main="SibSp")
+hist(data$SibSp, main="SibSp")
 
-df$Parch=outlier_norm(df$Parch)
+data$Parch=outlier_norm(data$Parch)
 par(mfrow=c(1,2))
-boxplot(df$Parch, main="Parch")
-hist(df$Parch, main="Parch")
-
-#table(data$Sex)
-#table(data$Survived)
-#warnings()
+boxplot(data$Parch, main="Parch")
+hist(data$Parch, main="Parch")
 ```
-
-Podemos observar como los valores extremos han desaparecido en las variables identificadas, por tanto hemos 
-
-```{r}
-#table(data$Sex)
-#table(data$Survived)
-warnings()
-```
-
-
 
 # Análisis de los datos. 
 
@@ -176,19 +165,13 @@ Pero yo lo decidiria despues del estudio de correlación (mira mas abajo), para 
 Y luego se haria logistic regression. Para hacer logistic regression con un grupo se haría asi:
 
 ```{r}
-modelo.logit <- glm(data = df, formula = Survived ~ Sex + Age + Pclass + Embarked, family = "binomial")
+modelo.logit <- glm(data = data, formula = Survived ~ Sex + Age + Pclass + Embarked, family = "binomial")
 summary(modelo.logit)
 ```
 
 ## Comprobación de la normalidad y homogeneidad de la varianza. 
 
 ### Comprobación de la normalidad
-Aitor: Este es tal cual así
-
-```{r}
-par(mfrow = c(1,2))
-plot(modelo_multiple)
-```
 
 Para la comprobación de la normalidad vamos a comprobamos si la variable se aproxima a un modelo de normalidad en las muestras. 
 
@@ -212,7 +195,7 @@ $$
 A continuación vamos a relalizar las pruebas de normalidad de shapiro-test, ya que la muestra de población es significativa.
 
 ```{r}
-shapiro.test(df$Age)
+shapiro.test(data$Age)
 ```
 
 En este caso podemos observar que el p-values<0.05, por tanto debemos rechazar la hipotesis nula a favor de la alternativa y afirmar que estos datos no provienen de una población normalmente distribuida. 
@@ -221,9 +204,9 @@ En este caso podemos observar que el p-values<0.05, por tanto debemos rechazar l
 ### Homogendeidad de la varianza de Age
 
 ```{r}
-male_survived <- data[data$Sex == "male","Survived"]
-female_survived <- data[data$Sex == "female","Survived"]
-fligner.test(x = list(male_survived,female_survived))
+#male_survived <- data[data$Sex == "male","Survived"]
+#female_survived <- data[data$Sex == "female","Survived"]
+#fligner.test(x = list(male_survived,female_survived))
 
 ```
 
@@ -238,38 +221,18 @@ Luego haria logistic regression (como he puesto mas arriba)
 Y por ultimo un contraste de hipotesis (miralo en tu pec de estadistica, creo que está hecho ahí)
 
 ```{r}
-df$Survived <- as.numeric(df$Survived)
-df$Sex <- as.numeric(df$Sex)
-df$Fare <- as.numeric(df$Fare)
-df$Pclass <- as.numeric(df$Pclass)
-df$Embarked <- as.numeric(df$Embarked)
+data$Survived <- as.numeric(data$Survived)
+data$Sex <- as.numeric(data$Sex)
+data$Fare <- as.numeric(data$Fare)
+data$Pclass <- as.numeric(data$Pclass)
+data$Embarked <- as.numeric(data$Embarked)
 
-require(corrplot)                                                                                                           
-corrplot.mixed(corr = cor(df[,c("SibSp", "Parch", "Sex", "Fare", "Pclass", "Embarked", "Survived")],
+corrplot.mixed(corr = cor(data[,c("SibSp", "Parch", "Sex", "Fare", "Pclass", "Embarked", "Survived")],
                           method = "pearson"))
 ```
 
 
 # Representación de los resultados a partir de tablas y gráficas.
-
-
-
-```{r}
-library(ggplot2)
-library(dplyr)
-```
-
-```{r}
-df$Survived <- as.numeric(df$Survived)
-df$Sex <- as.numeric(df$Sex)
-df$Fare <- as.numeric(df$Fare)
-df$Pclass <- as.numeric(df$Pclass)
-df$Embarked <- as.numeric(df$Embarked)
-
-require(corrplot)                                                                                                           
-corrplot.mixed(corr = cor(df[,c("SibSp", "Parch", "Sex", "Fare", "Pclass", "Embarked", "Survived")],
-                          method = "pearson"))
-```
 
 A través de este gráfico podemos observar que existe una relación muy alta entre las variables de Supervivencia con Sexo y Suvervivencia con Clase. El resto de relaciones es aparentemente obvio ya que el precio pagadao por el billete va muy relacionado con la clase y por tanto no aporta ninguna información interesante. Por otro lado lo mismo ocurre entre las variables de SibSp y Parch ya que directamente estan muy relacionadas entre ellas y tampoco aportan información imteresante.
 
