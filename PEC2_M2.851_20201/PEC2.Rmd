@@ -22,10 +22,6 @@ Cargamos el conjunto de datos y además modificamos el tipo de algunos de los ca
 
 ```{r load_data}
 library(readr)
-library(dplyr)
-library(ggplot2)
-require(corrplot) 
-library(caret)
 
 data <- read_csv("train.csv", col_types = cols(Embarked = col_factor(levels = c("S", 
     "Q", "C")), PassengerId = col_integer(), 
@@ -74,6 +70,7 @@ Como resultado los valores nulos de la variable Age se han sustituido por la med
 En el caso de los valores de la variable Embarked observamos que solo existen 3 registros con valores nulos. En este caso, eliminamos los NA de la variable Embarked ya que no son estadísticamente significativos comparados con las 889 observaciones restantes.
 
 ```{r}
+library(dplyr)
 df<-df %>% filter(!is.na(Embarked))
 print(colSums(is.na(df)))
 ```
@@ -93,20 +90,20 @@ Para la visualización de valores extremos, usaremos histogramas y gráficos de 
 
 ```{r Graphic Anlysis Extreme Values}
 par(mfrow=c(1,2))
-boxplot(df$Age, main="Age")
-hist(df$Age, main="Age")
+boxplot(data$Age, main="Age")
+hist(data$Age, main="Age")
 
 par(mfrow=c(1,2))
-boxplot(df$Fare, main="Fare")
-hist(df$Fare, main="Fare")
+boxplot(data$Fare, main="Fare")
+hist(data$Fare, main="Fare")
 
 par(mfrow=c(1,2))
-boxplot(df$SibSp, main="SibSp")
-hist(df$SibSp, main="SibSp")
+boxplot(data$SibSp, main="SibSp")
+hist(data$SibSp, main="SibSp")
 
 par(mfrow=c(1,2))
-boxplot(df$Parch, main="Parch")
-hist(df$Parch, main="Parch")
+boxplot(data$Parch, main="Parch")
+hist(data$Parch, main="Parch")
 ```
 
 Se puede observar en los gráficos mostrados anteriormente como en todos los casos podemos observar cierto grado de valores extremos en las variables númericas.
@@ -116,6 +113,7 @@ A continuación, realizaremos contenedores nuevos con los valores de "Age", "Far
 Para realizar esta acción crearemos una función que bla bla (Victor: si podemos explicar un poco que hace la función)
 
 ```{r}
+library(ggplot2)
 outlier_norm <- function(x){
    qntile <- quantile(x, probs=c(.25, .75))
    caps <- quantile(x, probs=c(.05, .95))
@@ -161,7 +159,13 @@ warnings()
 
 
 # Análisis de los datos. 
-## Selección de los grupos de datos que se quieren analizar/comparar (planificación  de los análisis a aplicar). 
+
+## Selección de los grupos de datos que se quieren analizar/comparar (planificación  de los análisis a aplicar).
+
+```{r}
+male_survived <- data[data$Sex == "male","Survived"]
+female_survived <- data[data$Sex == "female","Survived"]
+```
 
 Aitor: Para predecir survived/no survived podemos hacer "N" grupos. Por ejemplo:
 1- survived ~ sex + class
@@ -171,22 +175,34 @@ Pero yo lo decidiria despues del estudio de correlación (mira mas abajo), para 
 
 Y luego se haria logistic regression. Para hacer logistic regression con un grupo se haría asi:
 
-
+```{r}
+modelo.logit <- glm(data = df, formula = Survived ~ Sex + Age + Pclass + Embarked, family = "binomial")
+summary(modelo.logit)
+```
 
 ## Comprobación de la normalidad y homogeneidad de la varianza. 
+
+### Comprobación de la normalidad
+Aitor: Este es tal cual así
+
+```{r}
+par(mfrow = c(1,2))
+plot(modelo_multiple)
+```
 
 Para la comprobación de la normalidad vamos a comprobamos si la variable se aproxima a un modelo de normalidad en las muestras. 
 
 ```{r}
-qqnorm(df$Age)
-qqline(df$Age)
+qqnorm(data$Age)
+qqline(data$Age)
 ```
 
 ```{r}
-boxplot(df$Age, main="Age")
+boxplot(data$Age, main="Age")
 ```
 
 Una forma menos subjetiva de explorar la normalidad de un conjunto de datos es por medio de las pruebas de normalidad. Se va a usar un intervalo de confianza estandar del 95%. Las hipótesis para este tipo de pruebas son:
+
 $$
 \begin{array}{ll}
 H_{0}: La&muestra&proviene&de&una&población&normal.\\
@@ -195,67 +211,97 @@ H_{1}: La&muestra&proviene&de&una&población&no&normal.\\
 $$
 A continuación vamos a relalizar las pruebas de normalidad de shapiro-test, ya que la muestra de población es significativa.
 
-
-
 ```{r}
 shapiro.test(df$Age)
 ```
 
 En este caso podemos observar que el p-values<0.05, por tanto debemos rechazar la hipotesis nula a favor de la alternativa y afirmar que estos datos no provienen de una población normalmente distribuida. 
 
+
+### Homogendeidad de la varianza de Age
+
 ```{r}
-shapiro.test(df$Parch)
+male_survived <- data[data$Sex == "male","Survived"]
+female_survived <- data[data$Sex == "female","Survived"]
+fligner.test(x = list(male_survived,female_survived))
+
 ```
+
+
 
 ## Aplicación de pruebas estadísticas para comparar los grupos de datos. En función  de los datos y el objetivo del estudio, aplicar pruebas de contraste de hipótesis,  correlaciones, regresiones, etc. Aplicar al menos tres métodos de análisis  diferentes. 
 
-Podemos ver que existe una correlación positiva alta entre "Sexo" y "Survived". De igual modo los predictores "Pclass" y "Fare" contribuyen a determinar "Survived" y están correlacionados negativamente entre sí, lo cual tiene sentido puesto que un precio elevado corresponde con una categoría de camarote superior (Pclass = 1 es mejor que Pclass = 2) y éstos estarían situados en la parte superior de la embarcación. 
+Aitor: Para hacerlo con el resto de atributos hay que pasarlo a numerico, haciendolo como tu (Victor) lo has hecho en el primer paso.
 
+Luego haria logistic regression (como he puesto mas arriba)
+
+Y por ultimo un contraste de hipotesis (miralo en tu pec de estadistica, creo que está hecho ahí)
 
 ```{r}
-#Convertimos las variables de tipo factor a numeric para poder estudiar la correlación entre todas ellas
 df$Survived <- as.numeric(df$Survived)
 df$Sex <- as.numeric(df$Sex)
+df$Fare <- as.numeric(df$Fare)
 df$Pclass <- as.numeric(df$Pclass)
 df$Embarked <- as.numeric(df$Embarked)
 
-                                                                                                          
-corrplot.mixed(corr = cor(df[,c("SibSp", "Parch", "Sex", "Age", "Fare", "Pclass", "Embarked", "Survived")],
+require(corrplot)                                                                                                           
+corrplot.mixed(corr = cor(df[,c("SibSp", "Parch", "Sex", "Fare", "Pclass", "Embarked", "Survived")],
                           method = "pearson"))
 ```
 
 
+# Representación de los resultados a partir de tablas y gráficas.
+
+
 
 ```{r}
-#Convertimos Survived a factor para obtener labels que sean "0" o "1"
-df$Survived <- as.factor(df$Survived)
-modelo.logit <- glm(data = df, formula = Survived ~ Sex + Age + Pclass + Fare, family = "binomial")
-summary(modelo.logit)
-```
-
-Se observa que un incremento de una unidad en Sex, es decir, cuando el sexo es femenino (ajustando por las otras regresoras) aumenta las odds de
-sobrevivir en 13.81, que un incremento de una unidad en Age (ajustando por las otras regresoras) reduce las odds
-de sobrevivir en 0.96, que un incremento de una unidad en Pclass (ajustando por las otras regresoras)
-reduce las odds de sobrevivir en 0.29, y que un incremento de una unidad en Fare (ajustando por las otras regresoras)
-reduce las odds de sobrevivir en 0.99
-
-Vemos que el mayor impacto en incrementar la probabilidad de supervivencia es el regresor "Sex", mientras que en sentido contrario es "PClass"
-
-```{r}
-exp(cbind(coef(modelo.logit),confint(modelo.logit)))
+library(ggplot2)
+library(dplyr)
 ```
 
 ```{r}
-confusionMatrix(table(predict(modelo.logit, type="response") >= 0.5,df$Survived != 1))
+df$Survived <- as.numeric(df$Survived)
+df$Sex <- as.numeric(df$Sex)
+df$Fare <- as.numeric(df$Fare)
+df$Pclass <- as.numeric(df$Pclass)
+df$Embarked <- as.numeric(df$Embarked)
+
+require(corrplot)                                                                                                           
+corrplot.mixed(corr = cor(df[,c("SibSp", "Parch", "Sex", "Fare", "Pclass", "Embarked", "Survived")],
+                          method = "pearson"))
 ```
-# Representación de los resultados a partir de tablas y gráficas. 
+
+A través de este gráfico podemos observar que existe una relación muy alta entre las variables de Supervivencia con Sexo y Suvervivencia con Clase. El resto de relaciones es aparentemente obvio ya que el precio pagadao por el billete va muy relacionado con la clase y por tanto no aporta ninguna información interesante. Por otro lado lo mismo ocurre entre las variables de SibSp y Parch ya que directamente estan muy relacionadas entre ellas y tampoco aportan información imteresante.
+
+```{r}
+ggplot(data, aes(x=factor(1), fill=factor(Sex))) + geom_bar(width = 1) + coord_polar("y")
+```
+
+En primer lugar podemos ver según el estudio realizado había muchos más hombres que mujeres en el interior del barco. Sin embargo, a partir de un grafico de barras se ve claramente como hubo muchos más supervivientes mujeres que hombres.
+
+```{r}
+tbl <- with(data, table(Survived, Sex))
+barplot(tbl, beside = TRUE, legend = TRUE)
+```
+
+```{r}
+ggplot(data, aes(x=factor(1), fill=factor(Pclass))) + geom_bar(width = 1) + coord_polar("y")
+```
+También observamos que la mayor parte de los tripulantes eran de tercera clase y que de segunda y primera tenian una proporcion similar entre ellos.
+ 
+Pero si intentamos realizar el analisis visual de supervivientes en función de a clase: 
+
+
+```{r}
+tbl <- with(data, table(Survived, Pclass))
+barplot(tbl, beside = TRUE, legend = TRUE)
+```
+
+Vemos como claramente que la una gran parte de los supervivientes eran de primera clase aunque la proporción es menor que en la tercera.
 
 # Resolución del problema. A partir de los resultados obtenidos, ¿cuáles son las  conclusiones? ¿Los resultados permiten responder al problema?
 
+Como conclusiones del estudio, podemos concluir que si eras mujer y de primera clase, las probabilidades de sobrevivir eran mucho más altas en cualquier otro caso. En cambio, si pertenecías al grupo de tercera clase y eras hombre, las probabilidades de sobrevivir eran bastante escasas.
+
+
 # Código: Hay que adjuntar el código, preferiblemente en R, con el que se ha realizado la  limpieza, análisis y representación de los datos. Si lo preferís, también podéis trabajar en  Python.  
-
-Analisis de correlación de valores númericos
-```{r}
-#corrplot(cor(data[,6:8]), method = 'number')
-
-```
